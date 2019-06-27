@@ -30,16 +30,36 @@ class DatabaseHelper {
     var ourDb = await openDatabase(path, version: 1, onCreate: _onCreate);
     return ourDb;
   }
-  void _onCreate(Database db, int version) async{
+
+  void _onCreate(Database db, int version) async {
     await db.execute(
-      "CREATE TABLE $tableUser($columnId INTEGER PRIMARY KEY, $columnUsername TEXT, $columnPassword TEXT)"
-    );
+        "CREATE TABLE $tableUser($columnId INTEGER PRIMARY KEY, $columnUsername TEXT, $columnPassword TEXT)");
   }
 
-  Future<int> saveUser(User user) async{ 
+  Future<int> saveUser(User user) async {
     var dbClient = await db;
     int res = await dbClient.insert(tableUser, user.toMap());
     return res;
   }
-  
+
+  Future<List> getAllUsers() async {
+    var dbClient = await db;
+    var result = await dbClient.rawQuery("SELECT * FROM $tableUser");
+    return result.toList();
+  }
+
+  Future<int> getCount() async {
+    var dbClient = await db;
+    return Sqflite.firstIntValue(
+        await dbClient.rawQuery("SELECT COUNT(*) FROM $tableUser"));
+  }
+
+  Future<User> getUser(int id) async {
+    var dbClient = await db;
+    var result = await dbClient.rawQuery(
+      "SELECT * FROM $tableUser WHERE $columnId = $id"
+    );
+    if(result.length == 0) return null;
+    return User.fromMap(result.first);
+  } 
 }
